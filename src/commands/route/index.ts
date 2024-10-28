@@ -1,5 +1,5 @@
 import { join, parse } from 'node:path';
-import { exists, existsSync, outputFileSync, readFileSync, writeFileSync } from 'fs-extra';
+import { existsSync, outputFileSync, readFileSync, writeFileSync } from 'fs-extra';
 import inquirer from 'inquirer';
 import * as ts from 'typescript';
 
