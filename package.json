@@ -1,6 +1,6 @@
 {
   "name": "@laser-ui/cli",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Cli for Laser Admin.",
   "keywords": [
     "laser-ui",

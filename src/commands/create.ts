@@ -6,6 +6,7 @@ import inquirer from 'inquirer';
 
 export async function onCreate() {
   try {
+    console.log(colors.cyan("\nLet's create a new project\n"));
     const _info = await inquirer.prompt([
       {
         name: 'name',

@@ -1,4 +1,5 @@
 import { join, parse } from 'node:path';
+import colors from 'colors/safe';
 import { existsSync, outputFileSync, readFileSync, writeFileSync } from 'fs-extra';
 import inquirer from 'inquirer';
 import * as ts from 'typescript';
@@ -147,6 +148,7 @@ export async function onRoute() {
   try {
     projectRoot = checkPackageJson(process.cwd());
 
+    console.log(colors.cyan("\nLet's create a new route\n"));
     const _info = await inquirer.prompt([
       {
         name: 'path',
@@ -193,6 +195,8 @@ export async function onRoute() {
     updateACL(info.path, info.acl);
     updateMenu(info.path, info.acl, info.i18n, info.title);
     updateRouter(info.path, info.acl, info.i18n, info.title);
+
+    console.log(colors.green('\nSuccessfully create route!'));
   } catch (error) {
     console.error(error);
     process.exit(1);
