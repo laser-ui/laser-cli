@@ -87,7 +87,16 @@ function updateMenu(path: string, acl: string, i18n: boolean, title: string) {
   );
 }
 
-function updateRouter(path: string, acl: string, i18n: boolean, title: string) {
+function updateRouter(path: string, lazy: boolean, acl: string, i18n: boolean, title: string) {
+  const paths = path.split('/').filter((s) => s);
+  if (paths[paths.length - 1] === ':id') {
+    paths[paths.length - 1] = 'detail';
+  }
+  const component = paths[paths.length - 1]
+    .split('-')
+    .map((s) => s.charAt(0).toUpperCase() + String(s).slice(1))
+    .join('');
+
   const sourceFilePath = join(projectRoot, 'src/app/routes/Router.tsx');
   const sourceFile = readIntoSourceFile(sourceFilePath);
   const nodes = getSourceNodes(sourceFile);
@@ -99,7 +108,7 @@ function updateRouter(path: string, acl: string, i18n: boolean, title: string) {
   const insert2 = `
         {
           path: '${path}',
-          element: <AppRoute path="${path}" />,
+          element: <AppRoute ${lazy ? `path="${path}"` : `element={App${component}Route}`} />,
           data: {
             title: ${i18n ? `t('${title}', { ns: 'title' })` : `'${title}'`},
             ${
@@ -112,19 +121,17 @@ function updateRouter(path: string, acl: string, i18n: boolean, title: string) {
         },`;
   source = source.slice(0, expressionNode2.getStart() + 1) + insert2 + source.slice(expressionNode2.getStart() + 1);
 
-  const node1 = nodes.find((n) => n.kind === ts.SyntaxKind.Identifier && n.getText() === 'ROUTES');
-  const expressionNode1 = findExpressionNode(node1, ts.SyntaxKind.ObjectLiteralExpression);
-  const paths = path.split('/').filter((s) => s);
-  if (paths[paths.length - 1] === ':id') {
-    paths[paths.length - 1] = 'detail';
+  if (lazy) {
+    const node1 = nodes.find((n) => n.kind === ts.SyntaxKind.Identifier && n.getText() === 'ROUTES');
+    const expressionNode1 = findExpressionNode(node1, ts.SyntaxKind.ObjectLiteralExpression);
+    const insert1 = `
+    '${path}': lazy(() => import('./${paths.join('/')}/${component}')),`;
+    source = source.slice(0, expressionNode1.getStart() + 1) + insert1 + source.slice(expressionNode1.getStart() + 1);
+  } else {
+    source =
+      `import App${component}Route from './${paths.join('/')}/${component}';
+` + source;
   }
-  const component = paths[paths.length - 1]
-    .split('-')
-    .map((s) => s.charAt(0).toUpperCase() + String(s).slice(1))
-    .join('');
-  const insert1 = `
-  '${path}': lazy(() => import('./${paths.join('/')}/${component}')),`;
-  source = source.slice(0, expressionNode1.getStart() + 1) + insert1 + source.slice(expressionNode1.getStart() + 1);
 
   writeFileSync(sourceFilePath, source);
 
@@ -163,6 +170,11 @@ export async function onRoute() {
         },
       },
       {
+        name: 'lazy',
+        type: 'confirm',
+        message: 'Whether to defer loading route?',
+      },
+      {
         name: 'acl',
         type: 'input',
         message: 'What are your route permissions?',
@@ -187,6 +199,7 @@ export async function onRoute() {
     ]);
     const info = {
       path: _info.path.trim(),
+      lazy: _info.lazy,
       acl: _info.acl.trim(),
       i18n: _info.i18n,
       title: _info.title.trim(),
@@ -194,7 +207,7 @@ export async function onRoute() {
 
     updateACL(info.path, info.acl);
     updateMenu(info.path, info.acl, info.i18n, info.title);
-    updateRouter(info.path, info.acl, info.i18n, info.title);
+    updateRouter(info.path, info.lazy, info.acl, info.i18n, info.title);
 
     console.log(colors.green('\nSuccessfully create route!'));
   } catch (error) {
