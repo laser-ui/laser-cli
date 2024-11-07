@@ -15,7 +15,7 @@ npm install @laser-ui/cli -g
 Create a project using laser-admin as a template.
 
 ```bash
-laser-cli create
+npx laser-cli create
 ```
 
 ### route
@@ -23,5 +23,5 @@ laser-cli create
 Create a route for the laser-admin project.
 
 ```bash
-laser-cli route
+npx laser-cli route
 ```
